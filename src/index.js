@@ -2,7 +2,7 @@ console.log('%c HI', 'color: firebrick')
 
 const imgUrl = "https://dog.ceo/api/breeds/image/random/4"
 const breedUrl = 'https://dog.ceo/api/breeds/list/all'
-
+let breeds = []
 // ## Challenge 1
 
 
@@ -67,13 +67,11 @@ const getDoge = (jsonUrl) => {
     })
 }
 
-// It's a mouthful, but I need it all laid out at least one time to really get
-// it. AND I probably still don't get it completely.
-
 // invocation on page load
 getDoge(imgUrl)
 
-
+// It's a mouthful, but I need it all laid out at least one time to really get
+// it. AND I probably still don't get it completely.
 
 
 // ## Challenge 2
@@ -81,6 +79,46 @@ getDoge(imgUrl)
 // - on page load, fetches all the dog breeds using the url above ⬆️
 // - adds the breeds to the page in the`<ul>` provided in `index.html`
 
+// Essentially, this next function is getting dog breeds and putting them as li
+// elements in the ul#dog-breeds
+// Unlike the array from task 1, result.message will contain an object with 
+// key: value pairs, and each key stores an array with [] or [the, sub, breeds]
+// so no forEach, it'd be Object.keys
+
+const appendBreed = async (breed) => {
+    // find the element we're appending to
+    let ul = document.getElementById('dog-breeds')
+    // create a li element
+    let li = document.createElement('li')
+    // set its textContent as the argument
+    li.textContent = breed
+    // append li to ul
+    ul.append(li)
+    // this next code is from the third challenge
+    li.addEventListener('click', changeColor)
+}
+
+const getBreeds = async (jsonUrl) => {
+    // first two lines for getting resource are consistently gonna be fetch
+    // followed by resp => resp.json()
+    fetch(jsonUrl)
+    .then(resp => resp.json())
+    // we need to store the Object.keys as an array
+        .then(result => {
+            // important: breeds is declared globally at the top
+            breeds = Object.keys(result.message)
+            // and then array.forEach(element => callbackFunction(element)) 
+            // breeds.forEach(breed => appendBreed(breed)) // we changed this
+            // due to the deliverables in #4
+            updateBreedList(breeds)
+            changeListener()
+        })
+}
+
+getBreeds(breedUrl)
+
+// So, uh, our bulldog sub-classifications don't show up! But I'm not sure the
+// best way to go about fixing that, and the example code doesn't do it either!
 
 // ## Challenge 3
 
@@ -88,6 +126,14 @@ getDoge(imgUrl)
 // Add JavaScript that: 
 // - when the user clicks on any one of the `<li>`s, the font color of that`<li>`
 // changes.This can be a color of your choosing.
+// Seems simple, I just need to update my li function with an event listener
+// and either a callback function or an anonymous function. What's better?
+// Probably the abstractive way.
+
+const changeColor = (event) => {
+    event.target.style.color = 'blue'
+}
+
 
 // ---
 
@@ -101,3 +147,45 @@ getDoge(imgUrl)
 // names that start with the letter a. For simplicity, the dropdown only includes
 // the letters a - d.However, we can imagine expanding this to include the entire
 // alphabet.
+
+// So, the dropdown already exists as a select element with 4 options
+// We want to listen for change on the select element
+// And on change, update our list.
+
+// Since we've been so abstract so far, it's not a stretch to complete the
+// last goal. But we have multiple moving parts:
+
+// We need a function that filters a new breeds array with the .startsWith method
+// We need a function that removes the li's and repopulates the list with the new
+// list. We need a function that listens for the change events
+
+// I could either keep being abstract or make a solution that my small brain can
+// understand.
+
+// functions to: remove every UL item and put in a new list
+
+const updateBreedList = (newList) => {
+    let ul = document.getElementById('dog-breeds')
+    let deletees = ul.lastElementChild
+    while (deletees) { // while loop gets rid of everything then leaves when empty
+        ul.removeChild(deletees)
+        deletees = ul.lastElementChild
+    }
+    newList.forEach(breed => appendBreed(breed))
+}
+
+
+// abstract function to provide an event listener for the select changes
+
+// function to go from the big list to the little list, which will have to go into
+// our getBreeds function
+const selectLetter = (letter) => {
+    updateBreedList(breeds.filter(element => element.startsWith(letter)))
+}
+
+const changeListener = () => {
+    let dropdown = document.getElementById('breed-dropdown')
+    dropdown.addEventListener('change', (e) => {
+        selectLetter(e.target.value)
+    })
+}
